@@ -1,118 +1,82 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState } from 'react';
+// ios의 statusBar는 컴포넌트를 통해 배경색을 지정할 수 없다. SafeAreaView는 상단과 하단에 여백을 설정해 안전한 영역에만 UI 콘텐츠가 노출되기 때문에
+// ios는 여백 부분을 색상을 가지는 View로 채워야 함.
+// 특정 부분의 여백만 비활성화할 때 쓰이는 서드 파티 라이브 러리 - react-native-safe-area-context
+import { SafeAreaView, View, Text, StyleSheet, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
+import DateHead from './components/DateHead';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AddTodo from './components/AddTodo';
+import Empty from './components/Empty';
+import TodoList from './components/TodoList';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+function App() {
+  const today = new Date();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  const [todos, setTodos] = useState([
+    {id : 1, text : '작업환경 설정', done : true},
+    {id : 2, text : '리액트 네이티브 기초 공부', done : false},
+    {id : 3, text : '투두리스트 만들어보기', done : false},
+  ]);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  const onInsert = text => {
+    const nextId = todos.length > 0 ? Math.max(...todos.map(todo => todo.id)) + 1 : 1;
+    const todo = {
+      id : nextId,
+      text,
+      done : false,
+    };
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+    setTodos(todos.concat(todo));
+  };
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const onToggle = id => {
+    const nextTodos = todos.map(todo => 
+      todo.id === id ? {...todo, done : !todo.done} : todo,
+    );
+    setTodos(nextTodos);
+  };
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const onRemove = id => {
+    const nextTodos = todos.filter(todo => todo.id !== id);
+    setTodos(nextTodos);
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <>
+      {/* 앱 최상단에 노출되는 상태바 */}
+      {/* <StatusBar backgroundColor="#26a69a" /> */}
+      <SafeAreaProvider>
+        {/* edges는 SafeArea를 적용할 모서리를 배열로 전달. bottom, top, left, right 존재 */}
+        <SafeAreaView edges={['bottom']} style={styles.block}>
+        {/* KeyboardAvoidingView 키보드가 화면을 가리지 않게 해줌 */}
+          <KeyboardAvoidingView
+            behavior={Platform.select({ios : 'padding'})}
+            style={styles.avoid}>
+            <DateHead date={today}/>
+            {todos.length === 0 ? (
+                <Empty/>
+              ) : (
+                <TodoList todos={todos} onToggle={onToggle} onRemove={onRemove}/>
+                )}
+            <AddTodo onInsert={onInsert}/>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  block : {
+    flex : 1,
+    backgroundColor : 'white',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  avoid : {
+    flex : 1,
   },
 });
 
 export default App;
+
+
+// 195page
